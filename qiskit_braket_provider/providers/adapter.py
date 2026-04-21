@@ -982,6 +982,18 @@ def _restore_verbatim_boxes(
 
     return reconstructed_circuit
 
+def _remove_terminal_barrier(circ : QuantumCircuit): 
+    """ TODO: refactor as a TransformationPass """
+    n_i = len(circ.data)
+    for n,ins in enumerate(circ.data[::-1]):
+        if getattr(ins[0], 'name', None) == 'measure':
+            continue
+        elif getattr(ins[0], 'name', None) == 'barrier':
+            del circ.data[n_i - 1 - n]
+            break
+        else:
+            break
+    return circ
 
 @dataclass(frozen=True)
 class _CompilationContext:
@@ -1083,7 +1095,6 @@ def _compile(
         circuits = pass_manager.run(circuits, callback=callback, num_processes=num_processes)
     elif not verbatim:
         target = target if basis_gates or target else _default_target(circuits)
-        
         if has_verbatim_boxes:
             warnings.warn("Overriding layout method to 'trivial' "
             "and routing method to 'none' as the circuit has verbatim blocks", stacklevel=1)
@@ -1103,6 +1114,8 @@ def _compile(
                 )
             )
         ):
+            if basis_gates and "barrier" not in basis_gates: # TODO: refactor as Pass 
+                circuits = [_remove_terminal_barrier(circ) for circ in circuits]
             circuits = transpile(
                 circuits,
                 basis_gates=basis_gates,
