@@ -1,0 +1,325 @@
+{
+ "cells": [
+  {
+   "attachments": {},
+   "cell_type": "markdown",
+   "id": "c74932e2",
+   "metadata": {},
+   "source": "# How-to: Retrieve results from backend"
+  },
+  {
+   "cell_type": "code",
+   "id": "f543c651",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-12-05T23:30:43.924811Z",
+     "start_time": "2025-12-05T23:30:40.292069Z"
+    }
+   },
+   "source": [
+    "from qiskit import transpile\n",
+    "from qiskit.circuit.random import random_circuit\n",
+    "\n",
+    "from qiskit_braket_provider import BraketProvider"
+   ],
+   "outputs": [],
+   "execution_count": 1
+  },
+  {
+   "attachments": {},
+   "cell_type": "markdown",
+   "id": "e306df72",
+   "metadata": {},
+   "source": [
+    "Let's create random circuit"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "id": "ddc70eea",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-12-05T23:30:43.963152Z",
+     "start_time": "2025-12-05T23:30:43.930245Z"
+    }
+   },
+   "source": [
+    "circuit = random_circuit(5, 3, seed=42)\n",
+    "circuit.draw()"
+   ],
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "                                ┌───────┐\n",
+       "q_0: ───────■───────■───────────┤1      ├\n",
+       "          ┌─┴──┐    │           │       │\n",
+       "q_1: ─────┤ Sx ├─■──┼───────────┤2 Rccx ├\n",
+       "          └─┬──┘ │  │           │       │\n",
+       "q_2: ───────■────■──┼───────────┤0      ├\n",
+       "     ┌───┐  │    │  │U1(5.2002) └───────┘\n",
+       "q_3: ┤ H ├──┼────┼──■───────────────■────\n",
+       "     └───┘  │    │                ┌─┴─┐  \n",
+       "q_4: ───────■────■────────────────┤ H ├──\n",
+       "                                  └───┘  "
+      ],
+      "text/html": [
+       "<pre style=\"word-wrap: normal;white-space: pre;background: #fff0;line-height: 1.1;font-family: &quot;Courier New&quot;,Courier,monospace\">                                ┌───────┐\n",
+       "q_0: ───────■───────■───────────┤1      ├\n",
+       "          ┌─┴──┐    │           │       │\n",
+       "q_1: ─────┤ Sx ├─■──┼───────────┤2 Rccx ├\n",
+       "          └─┬──┘ │  │           │       │\n",
+       "q_2: ───────■────■──┼───────────┤0      ├\n",
+       "     ┌───┐  │    │  │U1(5.2002) └───────┘\n",
+       "q_3: ┤ H ├──┼────┼──■───────────────■────\n",
+       "     └───┘  │    │                ┌─┴─┐  \n",
+       "q_4: ───────■────■────────────────┤ H ├──\n",
+       "                                  └───┘  </pre>"
+      ]
+     },
+     "execution_count": 2,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "execution_count": 2
+  },
+  {
+   "attachments": {},
+   "cell_type": "markdown",
+   "id": "d96fb4ef",
+   "metadata": {},
+   "source": [
+    "Get backend"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "id": "50522a02",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-12-05T23:30:49.244672Z",
+     "start_time": "2025-12-05T23:30:43.978082Z"
+    }
+   },
+   "source": [
+    "provider = BraketProvider()\n",
+    "backend = provider.get_backend(\"SV1\")\n",
+    "backend"
+   ],
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "BraketBackend[SV1]"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "execution_count": 3
+  },
+  {
+   "attachments": {},
+   "cell_type": "markdown",
+   "id": "a9963aac",
+   "metadata": {},
+   "source": [
+    "Transpile circuit against given backend"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "id": "efd93336",
+   "metadata": {
+    "scrolled": true,
+    "ExecuteTime": {
+     "end_time": "2025-12-05T23:30:50.185517Z",
+     "start_time": "2025-12-05T23:30:50.130394Z"
+    }
+   },
+   "source": [
+    "transpiled_circuit = transpile(circuit, backend=backend, seed_transpiler=42)\n",
+    "transpiled_circuit.draw(idle_wires=False, fold=-1)"
+   ],
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "global phase: 7π/4\n",
+       "                                                                                                     ┌───┐┌────────────┐     ┌───┐┌───────────┐                                                           \n",
+       "q_0: ────────■───────────■──────────────■────────────────────────────■────────────────────────────■──┤ X ├┤ P(-2.6001) ├─────┤ X ├┤ P(2.6001) ├──────────────────■─────────────────────────■──────────────\n",
+       "     ┌───┐   │P(π/8)     │              │                            │                            │  └─┬─┘└────────────┘┌───┐└─┬─┘└───────────┘┌───┐   ┌───┐   ┌─┴─┐ ┌─────┐  ┌───┐ ┌───┐┌─┴─┐┌─────┐┌───┐\n",
+       "q_1: ┤ H ├───■───────────┼───■──────────┼───■─────────────■──────────┼───■─────────────■──────────┼────┼─────■──────────┤ H ├──┼────────■──────┤ H ├───┤ T ├───┤ X ├─┤ Tdg ├──┤ X ├─┤ T ├┤ X ├┤ Tdg ├┤ H ├\n",
+       "     └───┘             ┌─┴─┐ │P(-π/8) ┌─┴─┐ │P(π/8)       │          │   │             │          │    │     │          └───┘  │        │      └───┘   └───┘   └───┘ └─────┘  └─┬─┘ └───┘└───┘└─────┘└───┘\n",
+       "q_2: ──────────────────┤ X ├─■────────┤ X ├─■─────────■───┼──────────┼───┼─────────■───┼──────────┼────┼─────┼─────────────────┼────────■───────────────────────────────────────■─────────────────────────\n",
+       "     ┌───┐┌───────────┐└───┘          └───┘           │   │          │   │         │   │          │    │     │                 │        │                                                                 \n",
+       "q_3: ┤ H ├┤ P(2.6001) ├───────────────────────────────┼───┼──────────┼───┼─────────┼───┼──────────┼────■─────┼─────────────────■────────┼────────────────────────■────────────────────────────────────────\n",
+       "     └───┘└───────────┘                             ┌─┴─┐ │P(-π/8) ┌─┴─┐ │P(π/8) ┌─┴─┐ │P(-π/8) ┌─┴─┐        │P(π/8)    ┌───┐         ┌─┴─┐    ┌────┐┌────────┐┌─┴─┐┌────────┐┌────┐                      \n",
+       "q_4: ───────────────────────────────────────────────┤ X ├─■────────┤ X ├─■───────┤ X ├─■────────┤ X ├────────■──────────┤ H ├─────────┤ X ├────┤ √X ├┤ P(π/4) ├┤ X ├┤ P(π/4) ├┤ √X ├──────────────────────\n",
+       "                                                    └───┘          └───┘         └───┘          └───┘                   └───┘         └───┘    └────┘└────────┘└───┘└────────┘└────┘                      "
+      ],
+      "text/html": [
+       "<pre style=\"word-wrap: normal;white-space: pre;background: #fff0;line-height: 1.1;font-family: &quot;Courier New&quot;,Courier,monospace\">global phase: 7π/4\n",
+       "                                                                                                     ┌───┐┌────────────┐     ┌───┐┌───────────┐                                                           \n",
+       "q_0: ────────■───────────■──────────────■────────────────────────────■────────────────────────────■──┤ X ├┤ P(-2.6001) ├─────┤ X ├┤ P(2.6001) ├──────────────────■─────────────────────────■──────────────\n",
+       "     ┌───┐   │P(π/8)     │              │                            │                            │  └─┬─┘└────────────┘┌───┐└─┬─┘└───────────┘┌───┐   ┌───┐   ┌─┴─┐ ┌─────┐  ┌───┐ ┌───┐┌─┴─┐┌─────┐┌───┐\n",
+       "q_1: ┤ H ├───■───────────┼───■──────────┼───■─────────────■──────────┼───■─────────────■──────────┼────┼─────■──────────┤ H ├──┼────────■──────┤ H ├───┤ T ├───┤ X ├─┤ Tdg ├──┤ X ├─┤ T ├┤ X ├┤ Tdg ├┤ H ├\n",
+       "     └───┘             ┌─┴─┐ │P(-π/8) ┌─┴─┐ │P(π/8)       │          │   │             │          │    │     │          └───┘  │        │      └───┘   └───┘   └───┘ └─────┘  └─┬─┘ └───┘└───┘└─────┘└───┘\n",
+       "q_2: ──────────────────┤ X ├─■────────┤ X ├─■─────────■───┼──────────┼───┼─────────■───┼──────────┼────┼─────┼─────────────────┼────────■───────────────────────────────────────■─────────────────────────\n",
+       "     ┌───┐┌───────────┐└───┘          └───┘           │   │          │   │         │   │          │    │     │                 │        │                                                                 \n",
+       "q_3: ┤ H ├┤ P(2.6001) ├───────────────────────────────┼───┼──────────┼───┼─────────┼───┼──────────┼────■─────┼─────────────────■────────┼────────────────────────■────────────────────────────────────────\n",
+       "     └───┘└───────────┘                             ┌─┴─┐ │P(-π/8) ┌─┴─┐ │P(π/8) ┌─┴─┐ │P(-π/8) ┌─┴─┐        │P(π/8)    ┌───┐         ┌─┴─┐    ┌────┐┌────────┐┌─┴─┐┌────────┐┌────┐                      \n",
+       "q_4: ───────────────────────────────────────────────┤ X ├─■────────┤ X ├─■───────┤ X ├─■────────┤ X ├────────■──────────┤ H ├─────────┤ X ├────┤ √X ├┤ P(π/4) ├┤ X ├┤ P(π/4) ├┤ √X ├──────────────────────\n",
+       "                                                    └───┘          └───┘         └───┘          └───┘                   └───┘         └───┘    └────┘└────────┘└───┘└────────┘└────┘                      </pre>"
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "execution_count": 4
+  },
+  {
+   "attachments": {},
+   "cell_type": "markdown",
+   "id": "fa7d65c1",
+   "metadata": {},
+   "source": [
+    "Run circuit"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "id": "fc6aa158",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-12-05T23:30:51.261954Z",
+     "start_time": "2025-12-05T23:30:50.190910Z"
+    }
+   },
+   "source": "task = backend.run(transpiled_circuit, shots=10)",
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/Users/caw/Documents/GitHub/qiskit-braket-provider/qiskit_braket_provider/providers/adapter.py:910: UserWarning: Device does not support global phase; global phase of 5.497787143782138 will not be included in Braket circuit\n",
+      "  warnings.warn(\n"
+     ]
+    }
+   ],
+   "execution_count": 5
+  },
+  {
+   "cell_type": "code",
+   "id": "a4ea3a45",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-12-05T23:30:51.288573Z",
+     "start_time": "2025-12-05T23:30:51.286063Z"
+    }
+   },
+   "source": "f\"Task id {task.job_id().split('/')[-1]}\"",
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "'Task id b4bb1730-2614-4b06-93fc-4b5064507163'"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "execution_count": 6
+  },
+  {
+   "attachments": {},
+   "cell_type": "markdown",
+   "id": "83222235",
+   "metadata": {},
+   "source": [
+    "Retrieve job by id from backend"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "id": "f65cd41c",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-12-05T23:30:51.426489Z",
+     "start_time": "2025-12-05T23:30:51.293287Z"
+    }
+   },
+   "source": [
+    "retrieved_job = backend.retrieve_job(task_id=task.job_id())\n",
+    "retrieved_job"
+   ],
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<qiskit_braket_provider.providers.braket_quantum_task.BraketQuantumTask at 0x323450790>"
+      ]
+     },
+     "execution_count": 7,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "execution_count": 7
+  },
+  {
+   "cell_type": "code",
+   "id": "652bf407",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2025-12-05T23:30:53.220825Z",
+     "start_time": "2025-12-05T23:30:51.430476Z"
+    }
+   },
+   "source": [
+    "retrieved_job.result().get_counts()"
+   ],
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'00000': 3, '01000': 5, '11000': 2}"
+      ]
+     },
+     "execution_count": 8,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "execution_count": 8
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.10"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
